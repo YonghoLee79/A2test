@@ -7,6 +7,10 @@
       "label": "Arduino: 환경 설치 (코어 + 라이브러리)",
       "type": "shell",
       "command": "arduino-cli core update-index && arduino-cli core install arduino:avr && arduino-cli lib install \"DHT sensor library\" \"Adafruit Unified Sensor\" \"Servo\" \"LedControl\" \"LiquidCrystal I2C\"",
+      // Windows PowerShell 5는 && 를 지원하지 않으므로 cmd 로 실행
+      "windows": {
+        "options": { "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } }
+      },
       "problemMatcher": []
     },
     {
