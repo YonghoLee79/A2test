@@ -72,7 +72,22 @@ float readDistanceCm() {
   digitalWrite(TRIG_PIN, LOW);
   unsigned long duration = pulseIn(ECHO_PIN, HIGH, ECHO_TIMEOUT_US);
   if (duration == 0) return -1;
-  return duration * 0.0343 / 2.0;
+  float cm = duration * 0.0343 / 2.0;
+  if (cm < 2 || cm > 400) return -1;  // HC-SR04 측정 범위 밖은 오류로 처리
+  return cm;
+}
+
+// 최근 3번 측정값의 중간값: 한 번씩 튀는 값(0.05cm, 199cm 등)을 걸러냄
+float filteredDistanceCm() {
+  static float history[3] = {-1, -1, -1};
+  static byte index = 0;
+  history[index] = readDistanceCm();
+  index = (index + 1) % 3;
+
+  float a = history[0], b = history[1], c = history[2];
+  if ((a <= b && b <= c) || (c <= b && b <= a)) return b;
+  if ((b <= a && a <= c) || (c <= a && a <= b)) return a;
+  return c;
 }
 
 void updateRgb() {
@@ -193,7 +208,7 @@ void loop() {
 
   if (now - lastFast >= 100) {
     lastFast = now;
-    distanceCm = readDistanceCm();
+    distanceCm = filteredDistanceCm();
     light = analogRead(LIGHT_PIN);
     pot = analogRead(POT_PIN);
 
