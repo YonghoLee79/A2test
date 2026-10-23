@@ -14,7 +14,7 @@ All sketches use the same pins, so you can leave every part wired at once.
 | Servo signal | D9 | Use external 5V power if it jitters (share GND) |
 | Dot matrix (MAX7219) CS / DIN / CLK | D10 / D11 / D13 | |
 | LCD I2C SDA / SCL | A4 / A5 | Default address `0x27` (some modules use `0x3F`) |
-| Light sensor (CdS) | A0 | 10k voltage divider |
+| Light sensor (CdS / HL-01 module) | A0 (AO), D4 (DO, optional) | Bare CdS needs a 10k voltage divider |
 | Potentiometer | A1 | Wiper (middle pin) |
 
 > The Servo library blocks PWM on D9 and D10, so the RGB LED uses D3/D5/D6.
