@@ -210,8 +210,11 @@ void loop() {
 
   if (now - lastDht >= 2000) {
     lastDht = now;
+    // 도트 매트릭스가 켜져 있으면 전원 잡음으로 DHT11 온도가 튀므로, 읽는 동안(약 25ms)만 끔
+    matrix.shutdown(0, true);
     float h = dht.readHumidity();
     float t = dht.readTemperature();
+    matrix.shutdown(0, false);
     if (!isnan(h) && !isnan(t)) {
       humidity = h;
       temperature = filteredTemperature(t);
