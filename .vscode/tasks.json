@@ -1,0 +1,64 @@
+{
+  // arduino-cli 가 PATH 에 있어야 함 (https://arduino.github.io/arduino-cli/latest/installation/)
+  // 실행: Ctrl+Shift+P -> "Tasks: Run Task"
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Arduino: 환경 설치 (코어 + 라이브러리)",
+      "type": "shell",
+      "command": "arduino-cli core update-index && arduino-cli core install arduino:avr && arduino-cli lib install \"DHT sensor library\" \"Adafruit Unified Sensor\" \"Servo\" \"LedControl\" \"LiquidCrystal I2C\"",
+      "problemMatcher": []
+    },
+    {
+      "label": "Arduino: 포트 목록",
+      "type": "shell",
+      "command": "arduino-cli board list",
+      "problemMatcher": []
+    },
+    {
+      "label": "Arduino: 컴파일",
+      "type": "shell",
+      "command": "arduino-cli compile --fqbn arduino:avr:uno sketches/${input:sketch}",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Arduino: 컴파일 + 업로드",
+      "type": "shell",
+      "command": "arduino-cli compile --fqbn arduino:avr:uno --upload --port ${input:port} sketches/${input:sketch}",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Arduino: 시리얼 모니터",
+      "type": "shell",
+      "command": "arduino-cli monitor --port ${input:port} --config baudrate=9600",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "sketch",
+      "type": "pickString",
+      "description": "테스트할 스케치",
+      "options": [
+        "all_sensors",
+        "dht_test",
+        "ultrasonic_test",
+        "analog_test",
+        "rgb_test",
+        "servo_test",
+        "dotmatrix_test",
+        "lcd_i2c_test",
+        "i2c_scanner"
+      ],
+      "default": "all_sensors"
+    },
+    {
+      "id": "port",
+      "type": "promptString",
+      "description": "시리얼 포트 (Windows: COM3, macOS: /dev/cu.usbmodem*, Linux: /dev/ttyACM0)",
+      "default": "COM3"
+    }
+  ]
+}
