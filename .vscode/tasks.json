@@ -62,7 +62,7 @@
       "id": "port",
       "type": "promptString",
       "description": "시리얼 포트 (Windows: COM3, macOS: /dev/cu.usbmodem*, Linux: /dev/ttyACM0)",
-      "default": "COM3"
+      "default": "COM8"
     }
   ]
 }
