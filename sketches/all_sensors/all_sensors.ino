@@ -1,9 +1,13 @@
 // 통합 테스트: 모든 센서/부품을 동시에 연결해서 동작 확인
 //   DHT      -> LCD 1번째 줄 (온도/습도)
 //   HC-SR04  -> LCD 2번째 줄 + RGB LED 색 (가까움=빨강, 중간=초록, 멀리=파랑)
-//   가변저항 -> 서보 각도
+//   가변저항 -> 서보 각도 (USE_POT = false 면 거리에 따라 서보 각도)
 //   CdS 조도 -> 도트 매트릭스 막대 그래프
 // 핀 배치는 README.md 의 핀 맵 참고
+//
+// 서보가 움직일 때 전압이 순간적으로 떨어지면 LCD 글자가 깨지고 도트 매트릭스(MAX7219)가
+// 꺼짐 모드로 리셋될 수 있어서, 두 부품을 주기적으로 다시 초기화함.
+// 근본 해결: 서보에 외부 5V 전원(GND 공통) 또는 서보 전원에 470uF 이상 콘덴서 연결
 #include <DHT.h>
 #include <Servo.h>
 #include <LedControl.h>
@@ -26,6 +30,10 @@
 #define LCD_ADDR  0x27
 
 const bool COMMON_ANODE = false;
+// 가변저항을 A1 에 연결했으면 true. A1 이 비어 있으면 값이 흔들려 서보가 계속 움직이므로 false
+const bool USE_POT = false;
+const byte MATRIX_INTENSITY = 2;  // 0~15, 낮을수록 전류 적게 사용
+const int SERVO_DEADBAND = 3;     // 이 각도 미만의 변화는 무시 (서보 떨림 방지)
 const unsigned long ECHO_TIMEOUT_US = 30000;
 
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -42,6 +50,8 @@ int pot = 0;
 unsigned long lastDht = 0;
 unsigned long lastFast = 0;
 unsigned long lastPrint = 0;
+unsigned long lastReinit = 0;
+int servoAngle = 90;
 
 void setColor(byte r, byte g, byte b) {
   if (COMMON_ANODE) {
@@ -74,6 +84,7 @@ void updateRgb() {
 
 void updateMatrix() {
   // 밝을수록 아래에서부터 더 많은 줄이 켜짐 (0~8줄)
+  initMatrix();
   byte rows = map(light, 0, 1023, 0, 8);
   for (byte row = 0; row < 8; row++) {
     matrix.setRow(0, 7 - row, row < rows ? B11111111 : B00000000);
@@ -116,7 +127,30 @@ void printSerial() {
   Serial.print(F(" pot="));
   Serial.print(pot);
   Serial.print(F(" servo="));
-  Serial.println(servo.read());
+  Serial.println(servoAngle);
+}
+
+// MAX7219 는 리셋되면 꺼짐 모드 + 1줄만 표시로 돌아가므로 매번 설정을 다시 보냄 (명령 몇 개라 부담 없음)
+void initMatrix() {
+  matrix.setScanLimit(0, 7);
+  matrix.shutdown(0, false);
+  matrix.setIntensity(0, MATRIX_INTENSITY);
+}
+
+void updateServo() {
+  int target;
+  if (USE_POT) {
+    target = map(pot, 0, 1023, 0, 180);
+  } else if (distanceCm >= 0) {
+    // 5cm -> 0도, 50cm -> 180도
+    target = map(constrain((int)distanceCm, 5, 50), 5, 50, 0, 180);
+  } else {
+    return;
+  }
+  if (abs(target - servoAngle) >= SERVO_DEADBAND) {
+    servoAngle = target;
+    servo.write(servoAngle);
+  }
 }
 
 void setup() {
@@ -129,10 +163,10 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
 
   dht.begin();
+  servo.write(servoAngle);
   servo.attach(SERVO_PIN);
 
-  matrix.shutdown(0, false);
-  matrix.setIntensity(0, 4);
+  initMatrix();
   matrix.clearDisplay(0);
 
   lcd.init();
@@ -163,9 +197,16 @@ void loop() {
     light = analogRead(LIGHT_PIN);
     pot = analogRead(POT_PIN);
 
-    servo.write(map(pot, 0, 1023, 0, 180));
+    updateServo();
     updateRgb();
     updateMatrix();
+  }
+
+  // 전압 강하로 리셋/통신 오류가 난 경우를 대비해 주기적으로 다시 초기화
+  if (now - lastReinit >= 10000) {
+    lastReinit = now;
+    lcd.init();
+    lcd.backlight();
   }
 
   if (now - lastPrint >= 500) {

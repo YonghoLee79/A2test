@@ -31,7 +31,7 @@ All sketches use the same pins, so you can leave every part wired at once.
 | `sketches/dotmatrix_test` | Lights every dot one by one, then shows a smiley and a heart |
 | `sketches/lcd_i2c_test` | Shows text and uptime |
 | `sketches/i2c_scanner` | Finds the LCD's I2C address |
-| `sketches/all_sensors` | Integrated test with everything connected (temp/humidity/distance on the LCD, RGB color by distance, servo follows the potentiometer, dot matrix shows light level) |
+| `sketches/all_sensors` | Integrated test with everything connected (temp/humidity/distance on the LCD, RGB color by distance, servo follows distance, or the potentiometer with `USE_POT = true`; dot matrix shows light level) |
 
 ## Setup (once)
 
