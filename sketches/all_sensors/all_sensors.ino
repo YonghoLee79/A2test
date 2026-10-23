@@ -77,17 +77,29 @@ float readDistanceCm() {
   return cm;
 }
 
+float median3(float a, float b, float c) {
+  if ((a <= b && b <= c) || (c <= b && b <= a)) return b;
+  if ((b <= a && a <= c) || (c <= a && a <= b)) return a;
+  return c;
+}
+
 // 최근 3번 측정값의 중간값: 한 번씩 튀는 값(0.05cm, 199cm 등)을 걸러냄
 float filteredDistanceCm() {
   static float history[3] = {-1, -1, -1};
   static byte index = 0;
   history[index] = readDistanceCm();
   index = (index + 1) % 3;
+  return median3(history[0], history[1], history[2]);
+}
 
-  float a = history[0], b = history[1], c = history[2];
-  if ((a <= b && b <= c) || (c <= b && b <= a)) return b;
-  if ((b <= a && a <= c) || (c <= a && a <= b)) return a;
-  return c;
+// 온도도 전원 잡음으로 한 번씩 튀므로(22.5 -> 26.1 등) 최근 3번의 중간값 사용
+float filteredTemperature(float t) {
+  static float history[3] = {NAN, NAN, NAN};
+  static byte index = 0;
+  if (isnan(history[0])) history[0] = history[1] = history[2] = t;  // 첫 측정값으로 채움
+  history[index] = t;
+  index = (index + 1) % 3;
+  return median3(history[0], history[1], history[2]);
 }
 
 void updateRgb() {
@@ -202,7 +214,7 @@ void loop() {
     float t = dht.readTemperature();
     if (!isnan(h) && !isnan(t)) {
       humidity = h;
-      temperature = t;
+      temperature = filteredTemperature(t);
     }
   }
 
