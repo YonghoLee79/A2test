@@ -26,7 +26,7 @@ All sketches use the same pins, so you can leave every part wired at once.
 | `sketches/dht_test` | Prints temperature, humidity, and heat index |
 | `sketches/ultrasonic_test` | Prints distance (cm) |
 | `sketches/analog_test` | CdS and potentiometer values (best viewed in the serial plotter) |
-| `sketches/rgb_test` | PWM color/brightness control from the serial monitor (`255 100 0`, `r`/`g`/`b`/`w`/`off`, `bri 128`, `fade`, `demo`) |
+| `sketches/rgb_test` | PWM color/brightness control from the serial monitor (`255 100 0`, `r`/`g`/`b`/`w`/`off`, `bri 128`, `fire` flame effect, `speed 50`, `fade`, `demo`) |
 | `sketches/servo_test` | Sweeps once, then moves to an angle (0–180) you type in the serial monitor |
 | `sketches/dotmatrix_test` | Lights every dot one by one, then shows a smiley and a heart |
 | `sketches/lcd_i2c_test` | Shows text and uptime |
